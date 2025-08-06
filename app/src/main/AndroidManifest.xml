@@ -40,6 +40,16 @@
             android:exported="false"
             android:parentActivityName=".activity.MainActivity" />
 
-    </application>
+        <!-- Add these lines for authentication -->
+        <activity
+            android:name=".activity.RegisterActivity"
+            android:exported="false"
+            android:parentActivityName=".activity.MainActivity" />
 
+        <activity
+            android:name=".activity.LoginActivity"
+            android:exported="false"
+            android:parentActivityName=".activity.MainActivity" />
+
+    </application>
 </manifest>
