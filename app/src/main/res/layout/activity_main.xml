@@ -1,96 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
     android:background="#F5F5F5">
 
-    <!-- Header Card -->
-    <androidx.cardview.widget.CardView
+    <!-- Welcome Message -->
+    <TextView
+        android:id="@+id/welcome_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Welcome back!"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#2E7D32"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Total Expenses Card -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         app:cardCornerRadius="12dp"
-        app:cardElevation="6dp"
-        android:backgroundTint="#1976D2">
+        app:cardElevation="4dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp"
-            android:gravity="center">
+            android:padding="24dp"
+            android:gravity="center"
+            android:background="@drawable/gradient_background">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Total Expenses"
-                android:textColor="@android:color/white"
                 android:textSize="16sp"
-                android:textStyle="normal" />
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="8dp" />
 
             <TextView
                 android:id="@+id/total_expenses_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="$0.00"
-                android:textColor="@android:color/white"
                 android:textSize="32sp"
                 android:textStyle="bold"
-                android:layout_marginTop="8dp" />
+                android:textColor="#FFFFFF" />
 
         </LinearLayout>
 
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- Action Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="24dp">
+        android:layout_marginBottom="24dp"
+        android:weightSum="3">
 
         <Button
             android:id="@+id/add_expense_btn"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
             android:text="Add Expense"
-            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_rounded"
             android:backgroundTint="#4CAF50"
+            android:layout_marginEnd="4dp"
             android:drawableTop="@android:drawable/ic_input_add"
-            android:drawableTint="@android:color/white"
-            android:padding="12dp" />
+            android:drawablePadding="4dp" />
 
         <Button
             android:id="@+id/view_history_btn"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:layout_weight="1"
+            android:text="View History"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_rounded"
+            android:backgroundTint="#2196F3"
             android:layout_marginStart="4dp"
             android:layout_marginEnd="4dp"
-            android:text="History"
-            android:textColor="@android:color/white"
-            android:backgroundTint="#FF9800"
             android:drawableTop="@android:drawable/ic_menu_recent_history"
-            android:drawableTint="@android:color/white"
-            android:padding="12dp" />
+            android:drawablePadding="4dp" />
 
         <Button
             android:id="@+id/categories_btn"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
             android:text="Categories"
-            android:textColor="@android:color/white"
-            android:backgroundTint="#9C27B0"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_rounded"
+            android:backgroundTint="#FF9800"
+            android:layout_marginStart="4dp"
             android:drawableTop="@android:drawable/ic_menu_sort_by_size"
-            android:drawableTint="@android:color/white"
-            android:padding="12dp" />
+            android:drawablePadding="4dp" />
 
     </LinearLayout>
 
@@ -99,17 +116,47 @@
         android:id="@+id/recent_expenses_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Recent Expenses"
+        android:text="Recent Expenses (0)"
         android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="#333333"
         android:layout_marginBottom="12dp" />
 
+    <!-- Recent Expenses RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recent_expenses_recycler"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:scrollbars="vertical" />
+        android:background="@android:color/transparent"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp" />
+
+    <!-- Empty State (Optional) -->
+    <LinearLayout
+        android:id="@+id/empty_state"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No expenses yet"
+            android:textSize="18sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tap 'Add Expense' to get started"
+            android:textSize="14sp"
+            android:textColor="#999999" />
+
+    </LinearLayout>
 
 </LinearLayout>

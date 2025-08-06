@@ -7,13 +7,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import com.example.expensetracker.model.Expense;
 import com.example.expensetracker.model.Category;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DBHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "ExpenseTracker.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2; // Updated version for users table
 
     // Expenses table
     private static final String TABLE_EXPENSES = "expenses";
@@ -31,6 +33,13 @@ public class DBHelper extends SQLiteOpenHelper {
     private static final String COL_CATEGORY_ID = "id";
     private static final String COL_CATEGORY_NAME = "name";
     private static final String COL_CATEGORY_COLOR = "color";
+
+    // Users table
+    private static final String TABLE_USERS = "users";
+    private static final String COL_USER_ID = "id";
+    private static final String COL_USERNAME = "username";
+    private static final String COL_PASSWORD = "password";
+    private static final String COL_CREATED_AT = "created_at";
 
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -57,15 +66,29 @@ public class DBHelper extends SQLiteOpenHelper {
                 + COL_CATEGORY_COLOR + " TEXT" + ")";
         db.execSQL(CREATE_CATEGORIES_TABLE);
 
+        // Create users table
+        String CREATE_USERS_TABLE = "CREATE TABLE " + TABLE_USERS + "("
+                + COL_USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + COL_USERNAME + " TEXT UNIQUE NOT NULL,"
+                + COL_PASSWORD + " TEXT NOT NULL,"
+                + COL_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP" + ")";
+        db.execSQL(CREATE_USERS_TABLE);
+
         // Insert default categories
         insertDefaultCategories(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENSES);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CATEGORIES);
-        onCreate(db);
+        if (oldVersion < 2) {
+            // Add users table for version 2
+            String CREATE_USERS_TABLE = "CREATE TABLE " + TABLE_USERS + "("
+                    + COL_USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + COL_USERNAME + " TEXT UNIQUE NOT NULL,"
+                    + COL_PASSWORD + " TEXT NOT NULL,"
+                    + COL_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP" + ")";
+            db.execSQL(CREATE_USERS_TABLE);
+        }
     }
 
     private void insertDefaultCategories(SQLiteDatabase db) {
@@ -80,7 +103,120 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-    // Expense CRUD operations
+    // User Authentication Methods
+
+    /**
+     * Hash password using SHA-256
+     */
+    private String hashPassword(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(password.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return password; // Fallback to plain text (not recommended for production)
+        }
+    }
+
+    /**
+     * Insert new user into database
+     * @param username The username
+     * @param password The password (will be hashed)
+     * @return true if user was inserted successfully, false if username already exists
+     */
+    public boolean insertUser(String username, String password) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Check if username already exists
+        Cursor cursor = db.query(TABLE_USERS, null, COL_USERNAME + "=?",
+                new String[]{username}, null, null, null);
+
+        if (cursor.getCount() > 0) {
+            cursor.close();
+            db.close();
+            return false; // Username already exists
+        }
+        cursor.close();
+
+        // Insert new user
+        ContentValues values = new ContentValues();
+        values.put(COL_USERNAME, username);
+        values.put(COL_PASSWORD, hashPassword(password));
+
+        long result = db.insert(TABLE_USERS, null, values);
+        db.close();
+
+        return result != -1;
+    }
+
+    /**
+     * Check if user credentials are valid
+     * @param username The username
+     * @param password The password
+     * @return true if credentials are valid, false otherwise
+     */
+    public boolean checkUser(String username, String password) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String hashedPassword = hashPassword(password);
+
+        Cursor cursor = db.query(TABLE_USERS, null,
+                COL_USERNAME + "=? AND " + COL_PASSWORD + "=?",
+                new String[]{username, hashedPassword}, null, null, null);
+
+        boolean isValid = cursor.getCount() > 0;
+        cursor.close();
+        db.close();
+
+        return isValid;
+    }
+
+    /**
+     * Check if username exists in database
+     * @param username The username to check
+     * @return true if username exists, false otherwise
+     */
+    public boolean isUsernameExists(String username) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_USERS, null, COL_USERNAME + "=?",
+                new String[]{username}, null, null, null);
+
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        db.close();
+
+        return exists;
+    }
+
+    /**
+     * Get user ID by username
+     * @param username The username
+     * @return user ID if found, -1 otherwise
+     */
+    public int getUserId(String username) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_USERS, new String[]{COL_USER_ID},
+                COL_USERNAME + "=?", new String[]{username}, null, null, null);
+
+        int userId = -1;
+        if (cursor.moveToFirst()) {
+            userId = cursor.getInt(0);
+        }
+        cursor.close();
+        db.close();
+
+        return userId;
+    }
+
+    // Expense CRUD operations (existing methods remain unchanged)
     public long addExpense(Expense expense) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -172,7 +308,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    // Category operations
+    // Category operations (existing methods remain unchanged)
     public List<Category> getAllCategories() {
         List<Category> categoryList = new ArrayList<>();
         String selectQuery = "SELECT c." + COL_CATEGORY_ID + ", c." + COL_CATEGORY_NAME +
